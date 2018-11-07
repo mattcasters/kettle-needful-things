@@ -14,7 +14,7 @@ import org.pentaho.metastore.stores.delegate.DelegatingMetaStore;
 public class CarteStartupPatchMetastoreExtensionPoint implements ExtensionPointInterface {
 
   @Override public void callExtensionPoint( LogChannelInterface log, Object object ) throws KettleException {
-    if (!(object instanceof WebServer )) {
+    if ( !( object instanceof WebServer ) ) {
       return; // not for us
     }
 
@@ -24,29 +24,29 @@ public class CarteStartupPatchMetastoreExtensionPoint implements ExtensionPointI
     DelegatingMetaStore delegatingMetaStore = slaveServerConfig.getMetaStore();
     // Find the local metastore
     //
-    int index=-1;
-    for ( int i=0;i<delegatingMetaStore.getMetaStoreList().size();i++) {
-      IMetaStore metaStore = delegatingMetaStore.getMetaStoreList().get(i);
+    int index = -1;
+    for ( int i = 0; i < delegatingMetaStore.getMetaStoreList().size(); i++ ) {
+      IMetaStore metaStore = delegatingMetaStore.getMetaStoreList().get( i );
       try {
         if ( metaStore.getName().equalsIgnoreCase( Const.PENTAHO_METASTORE_NAME ) ) {
           // Replace this one with the correct metastore taking into account the PENTAHO_METASTORE_FOLDER variable
           //
-          index=i;
+          index = i;
           break;
         }
-      } catch(Exception e) {
+      } catch ( Exception e ) {
         // Log, ignore otherwise
         //
-        log.logError( "Unable to get name from metastore "+metaStore, e );
+        log.logError( "Unable to get name from metastore " + metaStore, e );
       }
     }
-    if (index>=0) {
+    if ( index >= 0 ) {
       try {
         IMetaStore correctMetaStore = MetaStoreConst.openLocalPentahoMetaStore();
         delegatingMetaStore.getMetaStoreList().set( index, correctMetaStore );
-      } catch( MetaStoreException e) {
+      } catch ( MetaStoreException e ) {
         throw new KettleException( "Unable to load metastore in needful things plugin (patch metastore)", e );
       }
     }
-   }
+  }
 }
