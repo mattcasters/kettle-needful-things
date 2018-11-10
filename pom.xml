@@ -50,6 +50,11 @@
       <version>${pentaho-kettle.version}</version>
     </dependency>
     <dependency>
+      <groupId>info.picocli</groupId>
+      <artifactId>picocli</artifactId>
+      <version>3.7.0</version>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>${junit.version}</version>
@@ -75,6 +80,13 @@
           <include>**/*.properties</include>
           <include>**/*.xul</include>
           <include>**/*.svg</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>src/main/script</directory>
+        <includes>
+          <include>**/*.sh</include>
+          <include>**/*.bat</include>
         </includes>
       </resource>
     </resources>
@@ -117,6 +129,11 @@
         <version>${pentaho-kettle.version}</version>
       </dependency>
       <dependency>
+        <groupId>info.picocli</groupId>
+        <artifactId>picocli</artifactId>
+        <version>3.7.0</version>
+      </dependency>
+      <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>${junit.version}</version>
@@ -135,5 +152,5 @@
 
 
   <groupId>kettle-needful-things</groupId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.3.0-SNAPSHOT</version>
 </project>
