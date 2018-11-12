@@ -247,7 +247,6 @@ public class Maitre implements Runnable {
       //
       trans.prepareExecution( arguments );
       trans.startThreads();
-      trans.startThreads();
       trans.waitUntilFinished();
     } catch ( Exception e ) {
       throw new ExecutionException( cmd, "Error running transformation locally", e );
