@@ -75,7 +75,7 @@ public class Maitre implements Runnable {
   @Option( names = { "-s", "--slave" }, description = "The slave server to run on" )
   private String slaveServerName;
 
-  @Option( names = { "-x", "--export" }, description = "Export all resources and send it to the slave server" )
+  @Option( names = { "-x", "--export" }, description = "Export all resources and send them to the slave server" )
   private boolean exportToSlaveServer = false;
 
   @Option( names = { "-c", "--clustered" }, description = "Execute clustered on the specified slave server (the master)" )
