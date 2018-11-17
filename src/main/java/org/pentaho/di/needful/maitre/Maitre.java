@@ -257,20 +257,31 @@ public class Maitre implements Runnable {
     SlaveServer slaveServer = configuration.getRemoteServer();
     slaveServer.shareVariablesWith( transMeta );
     try {
+      runTransformationOnSlaveServer( log, transMeta, slaveServer, configuration, metaStore, dontWait, getQueryDelay() );
+    } catch(Exception e) {
+      throw new ExecutionException( cmd, e.getMessage(), e );
+    }
+  }
+
+  public static Result runTransformationOnSlaveServer( LogChannelInterface log, TransMeta transMeta, SlaveServer slaveServer, TransExecutionConfiguration configuration, IMetaStore metaStore, boolean dontWait, int queryDelay ) throws Exception {
+    try {
       String carteObjectId = Trans.sendToSlaveServer( transMeta, configuration, null, metaStore );
       if (!dontWait) {
-        Trans.monitorRemoteTransformation( log, carteObjectId, transMeta.getName(), slaveServer, getQueryDelay() );
+        Trans.monitorRemoteTransformation( log, carteObjectId, transMeta.getName(), slaveServer, queryDelay );
         SlaveServerTransStatus transStatus = slaveServer.getTransStatus( transMeta.getName(), carteObjectId, 0 );
         if ( configuration.isLogRemoteExecutionLocally() ) {
           log.logBasic( transStatus.getLoggingString() );
         }
         if ( transStatus.getNrStepErrors() > 0 ) {
           // Error
-          throw new ExecutionException( cmd, "Remote transformation ended with an error" );
+          throw new Exception( "Remote transformation ended with an error" );
         }
+
+        return transStatus.getResult();
       }
+      return null; // No status, we don't wait for it.
     } catch ( Exception e ) {
-      throw new ExecutionException( cmd, "Error executing transformation remotely on server '" + slaveServer.getName() + "'", e );
+      throw new Exception( "Error executing transformation remotely on server '" + slaveServer.getName() + "'", e );
     }
   }
 
@@ -366,6 +377,15 @@ public class Maitre implements Runnable {
   private void runJobRemote( CommandLine cmd, LogChannelInterface log, JobMeta jobMeta, JobExecutionConfiguration configuration ) {
     SlaveServer slaveServer = configuration.getRemoteServer();
     slaveServer.shareVariablesWith( jobMeta );
+
+    try {
+
+    } catch(Exception e) {
+      throw new ExecutionException( cmd, e.getMessage(), e );
+    }
+  }
+
+  public static Result runJobOnSlaveServer(LogChannelInterface log, JobMeta jobMeta, SlaveServer slaveServer, JobExecutionConfiguration configuration, IMetaStore metaStore, boolean dontWait, boolean remoteLogging, int queryDelay ) throws Exception {
     try {
       String carteObjectId = Job.sendToSlaveServer( jobMeta, configuration, null, metaStore );
 
@@ -392,7 +412,7 @@ public class Maitre implements Runnable {
 
         // sleep for a while
         try {
-          Thread.sleep( getQueryDelay() );
+          Thread.sleep( queryDelay );
         } catch ( InterruptedException e ) {
           // Ignore
         }
@@ -408,11 +428,13 @@ public class Maitre implements Runnable {
         Result result = jobStatus.getResult();
         if ( result.getNrErrors() > 0 ) {
           // Error
-          throw new ExecutionException( cmd, "Remote job ended with an error" );
+          throw new Exception( "Remote job ended with an error" );
         }
+        return result;
       }
+      return null;
     } catch ( Exception e ) {
-      throw new ExecutionException( cmd, "Error executing job remotely on server '" + slaveServer.getName() + "'", e );
+      throw new Exception( "Error executing job remotely on server '" + slaveServer.getName() + "'", e );
     }
   }
 

@@ -9,6 +9,8 @@ import org.pentaho.di.metastore.MetaStoreConst;
 import org.pentaho.di.www.SlaveServerConfig;
 import org.pentaho.di.www.WebServer;
 import org.pentaho.metastore.api.IMetaStore;
+import org.pentaho.metastore.api.IMetaStoreElement;
+import org.pentaho.metastore.api.IMetaStoreElementType;
 import org.pentaho.metastore.api.exceptions.MetaStoreException;
 import org.pentaho.metastore.stores.delegate.DelegatingMetaStore;
 import org.pentaho.metastore.stores.xml.XmlMetaStore;
@@ -64,12 +66,29 @@ public class CarteStartupPatchMetastoreExtensionPoint implements ExtensionPointI
       if ( index >= 0 ) {
         delegatingMetaStore.getMetaStoreList().set( index, correctMetaStore );
         log.logBasic("Needful things replaced the local metastore.");
+
       } else {
         // Not found?  Add it at the beginning (bottom of hierarchy)
         //
         delegatingMetaStore.getMetaStoreList().add( 0, correctMetaStore );
         log.logBasic("Needful things add the local metastore at index 0.");
       }
+      delegatingMetaStore.setActiveMetaStoreName( correctMetaStore.getName() );
+
+      log.logBasic(">>>>>>>>>>>>>>>>>>>>> DELEGATE METASTORE CONTENTS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+      for (IMetaStore metaStore : delegatingMetaStore.getMetaStoreList()) {
+        log.logBasic("Metastore found : "+metaStore.getName());
+      }
+
+      log.logBasic(">>>>>>>>>>>>>>>>>>>>> METASTORE CONTENTS <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+      for (String namespace :  delegatingMetaStore.getNamespaces()) {
+        log.logBasic("Found namespace : "+namespace);
+        for ( IMetaStoreElementType elementType : delegatingMetaStore.getElementTypes( namespace )) {
+          log.logBasic("  Found type : "+elementType.getName()+" : "+delegatingMetaStore.getElements(namespace, elementType).size()+" elements found");
+        }
+      }
+      log.logBasic("<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+
     } catch ( MetaStoreException e ) {
       throw new KettleException( "Unable to load metastore in needful things plugin (patch metastore)", e );
     }
