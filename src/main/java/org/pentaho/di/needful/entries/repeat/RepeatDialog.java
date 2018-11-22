@@ -118,7 +118,7 @@ public class RepeatDialog extends JobEntryDialog implements JobEntryDialogInterf
     lastControl = wFilename;
 
     Label wlVariableName = new Label( shell, SWT.RIGHT );
-    wlVariableName.setText( "Variable when set exiting loop " );
+    wlVariableName.setText( "Stop repeating when this variable is set" );
     props.setLook( wlVariableName );
     FormData fdlVariableName = new FormData();
     fdlVariableName.left = new FormAttachment( 0, 0 );
@@ -136,7 +136,7 @@ public class RepeatDialog extends JobEntryDialog implements JobEntryDialogInterf
     lastControl = wVariableName;
 
     Label wlVariableValue = new Label( shell, SWT.RIGHT );
-    wlVariableValue.setText( "Variable when set exiting loop " );
+    wlVariableValue.setText( "Optional variable value " );
     props.setLook( wlVariableValue );
     FormData fdlVariableValue = new FormData();
     fdlVariableValue.left = new FormAttachment( 0, 0 );
