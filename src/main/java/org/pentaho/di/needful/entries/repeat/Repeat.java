@@ -124,10 +124,14 @@ public class Repeat extends JobEntryBase implements JobEntryInterface, Cloneable
     boolean repeat = true;
     while ( repeat && !parentJob.isStopped() ) {
       executionResult = executeTransformationOrJob( realFilename, nr );
-      if ( !executionResult.result.getResult() ) {
+      Result result = executionResult.result;
+      if ( !result.getResult() || result.getNrErrors()>0 || result.isStopped()) {
+        log.logError("The repeating work encountered and error or was stopped. This ends the loop.");
+
         // On an false result, stop the loop
         //
         prevResult.setResult( false );
+
         repeat = false;
       } else {
         // End repeat if the End Repeat job entry is executed
@@ -152,7 +156,6 @@ public class Repeat extends JobEntryBase implements JobEntryInterface, Cloneable
             // Ignore
           }
         }
-
       }
     }
 

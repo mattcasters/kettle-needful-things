@@ -45,7 +45,7 @@ import java.util.Properties;
 public class Maitre implements Runnable {
   public static final String MAITRE_START = "MaitreStart";
 
-  @Option( names = { "-f", "--file" }, description = "The filename of the job or transformation to run" )
+  @Option( names = { "-z", "--file" }, description = "The filename of the job or transformation to run" )
   private String filename;
 
   @Option( names = { "-l", "--level" }, description = "The debug level, one of NONE, MINIMAL, BASIC, DETAILED, DEBUG, ROWLEVEL" )
