@@ -6,6 +6,7 @@ import org.pentaho.di.cluster.SlaveServer;
 import org.pentaho.di.core.Const;
 import org.pentaho.di.core.KettleEnvironment;
 import org.pentaho.di.core.Result;
+import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.extension.ExtensionPointHandler;
 import org.pentaho.di.core.extension.KettleExtensionPoint;
 import org.pentaho.di.core.logging.LogChannel;
@@ -43,9 +44,10 @@ import java.io.IOException;
 import java.util.Properties;
 
 public class Maitre implements Runnable {
-  public static final String MAITRE_START = "MaitreStart";
+  public static final String XP_MAITRE_START = "MaitreStart";
+  public static final String XP_CREATE_ENVIRONMENT = "CreateEnvironment";
 
-  @Option( names = { "-z", "--file" }, description = "The filename of the job or transformation to run" )
+  @Option( names = { "-f", "-z", "--file" }, description = "The filename of the job or transformation to run" )
   private String filename;
 
   @Option( names = { "-l", "--level" }, description = "The debug level, one of NONE, MINIMAL, BASIC, DETAILED, DEBUG, ROWLEVEL" )
@@ -96,12 +98,14 @@ public class Maitre implements Runnable {
   @Option( names = { "-initialDir" }, description = "Ignored", hidden = true )
   private String intialDir = null;
 
-  @Parameters(arity = "1..*", paramLabel = "ARGUMENT", description = "Command line argument(s)", defaultValue = "", hidden = true)
-  private String[] arguments;
-
   @Option( names = { "-e", "--environment" }, description = "The name of the environment to use" )
   private String environment;
 
+  @Option( names = { "--create-environment" }, description = "Create an environment using format <Name>=<Base folder>, applies the environment created" )
+  private String createEnvironmentOption;
+
+  @Parameters(arity = "1..*", paramLabel = "ARGUMENT", description = "Command line argument(s)", defaultValue = "", hidden = true)
+  private String[] arguments;
 
   private VariableSpace space;
   private String realRunConfigurationName;
@@ -122,12 +126,14 @@ public class Maitre implements Runnable {
 
       // Allow modification of various environment settings
       //
-      ExtensionPointHandler.callExtensionPoint( log, MAITRE_START, environment );
+      ExtensionPointHandler.callExtensionPoint( log, XP_MAITRE_START, environment );
 
       buildVariableSpace();
       buildMetaStore();
 
-
+      if (StringUtils.isNotEmpty( createEnvironmentOption )) {
+        createEnvironment();
+      }
 
       if ( isTransformation() ) {
         runTransformation( cmd, log );
@@ -478,12 +484,18 @@ public class Maitre implements Runnable {
     if ( runTransformation ) {
       return true;
     }
+    if (StringUtils.isEmpty( filename )) {
+      return false;
+    }
     return filename.toLowerCase().endsWith( ".ktr" );
   }
 
   private boolean isJob() {
     if ( runJob ) {
       return true;
+    }
+    if (StringUtils.isEmpty( filename )) {
+      return false;
     }
     return filename.toLowerCase().endsWith( ".kjb" );
   }
@@ -599,8 +611,32 @@ public class Maitre implements Runnable {
     }
   }
 
+  public void createEnvironment() throws KettleException {
+
+    // Parse the options and call an extension point...
+    // Look in the kettle-environment project for the actual code behind this.
+    //
+    String environmentName;
+    String baseFolder;
+
+    int equalsIndex = createEnvironmentOption.indexOf( '=' );
+    if (equalsIndex<0) {
+      // Default
+      environmentName = createEnvironmentOption;
+      baseFolder = null;
+    } else {
+      environmentName = createEnvironmentOption.substring( 0, equalsIndex );
+      baseFolder = createEnvironmentOption.substring( equalsIndex+1 );
+    }
+
+    // Now call the extension point.
+    // The kettle-environment project knows how to handle this in the best possible way
+    //
+    ExtensionPointHandler.callExtensionPoint( log, XP_CREATE_ENVIRONMENT, new Object[] { environmentName, baseFolder } );
+  }
+
   private void validateOptions() {
-    if ( StringUtils.isEmpty( filename ) ) {
+    if ( StringUtils.isEmpty( filename ) && StringUtils.isEmpty( createEnvironmentOption ) ) {
       throw new ParameterException( new CommandLine( this ), "A filename is needed to run a job or transformation" );
     }
   }
@@ -957,6 +993,38 @@ public class Maitre implements Runnable {
    */
   public void setIntialDir( String intialDir ) {
     this.intialDir = intialDir;
+  }
+
+  /**
+   * Gets environment
+   *
+   * @return value of environment
+   */
+  public String getEnvironment() {
+    return environment;
+  }
+
+  /**
+   * @param environment The environment to set
+   */
+  public void setEnvironment( String environment ) {
+    this.environment = environment;
+  }
+
+  /**
+   * Gets createEnvironmentOption
+   *
+   * @return value of createEnvironmentOption
+   */
+  public String getCreateEnvironmentOption() {
+    return createEnvironmentOption;
+  }
+
+  /**
+   * @param createEnvironmentOption The createEnvironmentOption to set
+   */
+  public void setCreateEnvironmentOption( String createEnvironmentOption ) {
+    this.createEnvironmentOption = createEnvironmentOption;
   }
 
   /**

@@ -2,7 +2,6 @@
 package org.pentaho.di.needful.steps.execremote;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.custom.CCombo;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.ShellAdapter;
@@ -11,6 +10,7 @@ import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
@@ -40,8 +40,8 @@ public class ExecuteOnSlaveDialog extends BaseStepDialog implements StepDialogIn
 
   private boolean getpreviousFields = false;
 
-  private CCombo wSlaveField;
-  private CCombo wFilenameField;
+  private Combo wSlaveField;
+  private Combo wFilenameField;
   private Text wResultXmlField;
   private Button wExportResources;
   private Button wNotWaiting;
@@ -107,7 +107,7 @@ public class ExecuteOnSlaveDialog extends BaseStepDialog implements StepDialogIn
     fdlSlaveField.top = new FormAttachment( lastControl, margin );
     fdlSlaveField.right = new FormAttachment( middle, -margin );
     wlSlaveField.setLayoutData( fdlSlaveField );
-    wSlaveField = new CCombo( shell, SWT.SINGLE | SWT.LEFT | SWT.BORDER );
+    wSlaveField = new Combo( shell, SWT.SINGLE | SWT.LEFT | SWT.BORDER );
     wSlaveField.setItems( fieldNames );
     props.setLook( wSlaveField );
     FormData fdSlaveField = new FormData();
@@ -125,7 +125,7 @@ public class ExecuteOnSlaveDialog extends BaseStepDialog implements StepDialogIn
     fdlFilenameField.top = new FormAttachment( lastControl, margin );
     fdlFilenameField.right = new FormAttachment( middle, -margin );
     wlFilenameField.setLayoutData( fdlFilenameField );
-    wFilenameField = new CCombo( shell, SWT.SINGLE | SWT.LEFT | SWT.BORDER );
+    wFilenameField = new Combo( shell, SWT.SINGLE | SWT.LEFT | SWT.BORDER );
     wFilenameField.setItems( fieldNames );
     props.setLook( wFilenameField );
     FormData fdFilenameField = new FormData();
