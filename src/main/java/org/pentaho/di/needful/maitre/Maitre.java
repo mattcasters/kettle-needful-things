@@ -41,11 +41,13 @@ import picocli.CommandLine.ParameterException;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Properties;
 
 public class Maitre implements Runnable {
   public static final String XP_MAITRE_START = "MaitreStart";
   public static final String XP_CREATE_ENVIRONMENT = "CreateEnvironment";
+  public static final String XP_IMPORT_ENVIRONMENT = "ImportEnvironment";
 
   @Option( names = { "-f", "-z", "--file" }, description = "The filename of the job or transformation to run" )
   private String filename;
@@ -101,8 +103,15 @@ public class Maitre implements Runnable {
   @Option( names = { "-e", "--environment" }, description = "The name of the environment to use" )
   private String environment;
 
-  @Option( names = { "--create-environment" }, description = "Create an environment using format <Name>=<Base folder>, applies the environment created" )
+  @Option( names = { "-C", "--create-environment" }, description = "Create an environment using format <Name>=<Base folder>, applies the environment created" )
   private String createEnvironmentOption;
+
+  @Option( names = { "-I", "--import-environment" }, description = "Import an environment from a JSON file" )
+  private String environmentJsonFilename;
+
+  @Option( names = { "-V", "--add-variable-to-environment", }, description = "When creating an environment, add the given variable in format <Variable>=<Value>:<Description>. You can specify this option multiple times." )
+  private Map<String, String> variablesToAddToEnvironment;
+
 
   @Parameters(arity = "1..*", paramLabel = "ARGUMENT", description = "Command line argument(s)", defaultValue = "", hidden = true)
   private String[] arguments;
@@ -133,6 +142,9 @@ public class Maitre implements Runnable {
 
       if (StringUtils.isNotEmpty( createEnvironmentOption )) {
         createEnvironment();
+      }
+      if (StringUtils.isNotEmpty( environmentJsonFilename )) {
+        importEnvironment();
       }
 
       if ( isTransformation() ) {
@@ -632,11 +644,27 @@ public class Maitre implements Runnable {
     // Now call the extension point.
     // The kettle-environment project knows how to handle this in the best possible way
     //
-    ExtensionPointHandler.callExtensionPoint( log, XP_CREATE_ENVIRONMENT, new Object[] { environmentName, baseFolder } );
+    ExtensionPointHandler.callExtensionPoint( log, XP_CREATE_ENVIRONMENT, new Object[] { environmentName, baseFolder, variablesToAddToEnvironment } );
+  }
+
+  public void importEnvironment() throws KettleException {
+
+    // Call an extension point with the file to import...
+    // Look in the kettle-environment project for the actual code behind this.
+    // The kettle-environment project knows how to handle this in the best possible way
+    //
+    ExtensionPointHandler.callExtensionPoint( log, XP_IMPORT_ENVIRONMENT, new Object[] { environmentJsonFilename } );
   }
 
   private void validateOptions() {
-    if ( StringUtils.isEmpty( filename ) && StringUtils.isEmpty( createEnvironmentOption ) ) {
+    if (StringUtils.isNotEmpty( createEnvironmentOption )) {
+      return;
+    }
+    if (StringUtils.isNotEmpty( environmentJsonFilename )) {
+      return;
+    }
+
+    if ( StringUtils.isEmpty( filename ) ) {
       throw new ParameterException( new CommandLine( this ), "A filename is needed to run a job or transformation" );
     }
   }
