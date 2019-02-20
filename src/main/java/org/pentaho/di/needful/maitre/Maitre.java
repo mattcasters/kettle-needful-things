@@ -1,6 +1,7 @@
 package org.pentaho.di.needful.maitre;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.vfs2.FileObject;
 import org.pentaho.di.ExecutionConfiguration;
 import org.pentaho.di.cluster.SlaveServer;
 import org.pentaho.di.core.Const;
@@ -16,6 +17,7 @@ import org.pentaho.di.core.parameters.NamedParams;
 import org.pentaho.di.core.parameters.UnknownParamException;
 import org.pentaho.di.core.variables.VariableSpace;
 import org.pentaho.di.core.variables.Variables;
+import org.pentaho.di.core.vfs.KettleVFS;
 import org.pentaho.di.job.Job;
 import org.pentaho.di.job.JobExecutionConfiguration;
 import org.pentaho.di.job.JobMeta;
@@ -241,8 +243,24 @@ public class Maitre implements Runnable {
   /**
    * This way we can actually use environment variables to parse the real filename
    */
-  private void calculateRealFilename() {
+  private void calculateRealFilename() throws KettleException {
     realFilename = space.environmentSubstitute( filename );
+
+    try {
+      FileObject fileObject = KettleVFS.getFileObject( realFilename );
+      if (!fileObject.exists()) {
+        // Try to prepend with ${ENVIRONMENT_HOME}
+        //
+        String alternativeFilename = space.environmentSubstitute( "${ENVIRONMENT_HOME}/"+filename );
+        fileObject = KettleVFS.getFileObject( alternativeFilename );
+        if (fileObject.exists()) {
+          realFilename = alternativeFilename;
+          log.logMinimal( "Relative path filename specified: "+realFilename );
+        }
+      }
+    } catch(Exception e) {
+      throw new KettleException( "Error calculating filename", e );
+    }
   }
 
   private void runTransLocal( CommandLine cmd, LogChannelInterface log, TransExecutionConfiguration configuration, TransMeta transMeta ) {
