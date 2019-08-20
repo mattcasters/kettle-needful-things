@@ -203,22 +203,23 @@ public class Repeat extends JobEntryBase implements JobEntryInterface, Cloneable
     Trans trans = new Trans( transMeta, this );
     trans.setParentJob( getParentJob() );
     if (keepingValues && previousResult!=null) {
-      trans.initializeVariablesFrom( previousResult.space );
+      trans.copyVariablesFrom( previousResult.space );
     } else {
       trans.initializeVariablesFrom( getParentJob() );
+
+      // Also copy the parameters over...
+      //
+      trans.copyParametersFrom( transMeta );
+      trans.copyParametersFrom( parentJob );
+      transMeta.activateParameters();
+      trans.activateParameters();
     }
     trans.getTransMeta().setInternalKettleVariables( trans );
-    trans.injectVariables( getVariablesMap( transMeta ) );
+    trans.injectVariables( getVariablesMap( transMeta, previousResult ) );
 
     trans.setLogLevel( getLogLevel() );
     trans.setMetaStore( metaStore );
 
-    // Also copy the parameters over...
-    //
-    trans.copyParametersFrom( transMeta );
-    trans.copyParametersFrom( parentJob );
-    transMeta.activateParameters();
-    trans.activateParameters();
 
     // Inform the parent job we started something here...
     //
@@ -237,13 +238,20 @@ public class Repeat extends JobEntryBase implements JobEntryInterface, Cloneable
     return new ExecutionResult( result, trans, flagSet );
   }
 
-  private Map<String, String> getVariablesMap( NamedParams namedParams ) {
+  private Map<String, String> getVariablesMap( NamedParams namedParams, ExecutionResult previousResult ) {
+    String[] params = namedParams.listParameters();
     Map<String, String> variablesMap = new HashMap<>();
-    for ( ParameterDetails parameter : parameters ) {
-      try {
-        namedParams.getParameterDescription( parameter.getName() );
-      } catch ( UnknownParamException e ) {
-        variablesMap.put( parameter.getName(), parameter.getName() );
+
+    if (keepingValues && previousResult!=null) {
+      for (String variableName : previousResult.space.listVariables()) {
+        variablesMap.put(variableName, previousResult.space.getVariable( variableName ));
+      }
+    } else {
+      // Initialize the values of the defined parameters in the job entry
+      //
+      for ( ParameterDetails parameter : parameters ) {
+        String value = environmentSubstitute( parameter.getField() );
+        variablesMap.put( parameter.getName(), value );
       }
     }
     return variablesMap;
@@ -252,27 +260,28 @@ public class Repeat extends JobEntryBase implements JobEntryInterface, Cloneable
   private ExecutionResult executeJob( String realFilename, int nr, ExecutionResult previousResult ) throws KettleException {
 
     JobMeta jobMeta = loadJob( realFilename, rep, metaStore, this );
-
     Job job = new Job( getRepository(), jobMeta, this );
     job.setParentJob( getParentJob() );
     job.setParentVariableSpace( this );
     if (keepingValues && previousResult!=null) {
-      job.initializeVariablesFrom( previousResult.space );
+      job.copyVariablesFrom( previousResult.space );
     } else {
       job.initializeVariablesFrom( this );
+
+      // Also copy the parameters over...
+      //
+      job.copyParametersFrom( jobMeta );
+      job.copyParametersFrom( parentJob );
     }
+    jobMeta.activateParameters();
+    job.activateParameters();
     job.getJobMeta().setInternalKettleVariables( job );
-    job.injectVariables( getVariablesMap( jobMeta ) );
+    job.injectVariables( getVariablesMap( jobMeta, previousResult ) );
     job.setArguments( parentJob.getArguments() );
 
     job.setLogLevel( getLogLevel() );
 
-    // Also copy the parameters over...
-    //
-    job.copyParametersFrom( jobMeta );
-    job.copyParametersFrom( parentJob );
-    jobMeta.activateParameters();
-    job.activateParameters();
+
 
     if (parentJob.isInteractive()) {
       job.setInteractive( true );

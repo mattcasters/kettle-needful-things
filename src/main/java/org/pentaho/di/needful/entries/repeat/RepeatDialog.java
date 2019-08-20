@@ -218,6 +218,7 @@ public class RepeatDialog extends JobEntryDialog implements JobEntryDialogInterf
       new ColumnInfo("Name", ColumnInfo.COLUMN_TYPE_TEXT, false, false),
       new ColumnInfo("Value", ColumnInfo.COLUMN_TYPE_TEXT, false, false),
     };
+    columnInfos[1].setUsingVariables( true );
 
     wParameters = new TableView( jobMeta, shell, SWT.BORDER, columnInfos, jobEntry.getParameters().size(), null, props );
     props.setLook( wParameters );
