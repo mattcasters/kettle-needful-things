@@ -269,8 +269,8 @@ public class RepeatDialog extends JobEntryDialog implements JobEntryDialogInterf
     }
     jobEntry.setName( wName.getText() );
     jobEntry.setFilename( wFilename.getText() );
-    jobEntry.setVariableName( wVariableValue.getText() );
-    jobEntry.setVariableValue( wVariableName.getText() );
+    jobEntry.setVariableName( wVariableName.getText() );
+    jobEntry.setVariableValue( wVariableValue.getText() );
     jobEntry.setDelay( wDelay.getText() );
 
     jobEntry.getParameters().clear();

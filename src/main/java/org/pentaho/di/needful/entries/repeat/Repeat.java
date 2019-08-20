@@ -200,7 +200,7 @@ public class Repeat extends JobEntryBase implements JobEntryInterface, Cloneable
     TransMeta transMeta = loadTransformation( realFilename, rep, metaStore, this );
     Trans trans = new Trans( transMeta, this );
     trans.setParentJob( getParentJob() );
-    trans.initializeVariablesFrom( null );
+    trans.initializeVariablesFrom( getParentJob() );
     trans.getTransMeta().setInternalKettleVariables( trans );
     trans.injectVariables( getVariablesMap( transMeta ) );
 
@@ -210,6 +210,7 @@ public class Repeat extends JobEntryBase implements JobEntryInterface, Cloneable
     // Also copy the parameters over...
     //
     trans.copyParametersFrom( transMeta );
+    trans.copyParametersFrom( parentJob );
     transMeta.activateParameters();
     trans.activateParameters();
 
@@ -259,6 +260,7 @@ public class Repeat extends JobEntryBase implements JobEntryInterface, Cloneable
     // Also copy the parameters over...
     //
     job.copyParametersFrom( jobMeta );
+    job.copyParametersFrom( parentJob );
     jobMeta.activateParameters();
     job.activateParameters();
 
@@ -300,7 +302,7 @@ public class Repeat extends JobEntryBase implements JobEntryInterface, Cloneable
       if ( StringUtil.isEmpty( value ) ) {
         return false;
       }
-      String realValue = environmentSubstitute( realVariable );
+      String realValue = environmentSubstitute( variableValue );
 
       // If we didn't specify any specific value, the variable is simply set.
       //
