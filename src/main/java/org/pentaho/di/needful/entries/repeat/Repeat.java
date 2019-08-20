@@ -9,6 +9,7 @@ import org.pentaho.di.core.database.DatabaseMeta;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.exception.KettleXMLException;
 import org.pentaho.di.core.parameters.NamedParams;
+import org.pentaho.di.core.parameters.NamedParamsDefault;
 import org.pentaho.di.core.parameters.UnknownParamException;
 import org.pentaho.di.core.util.StringUtil;
 import org.pentaho.di.core.variables.VariableSpace;
@@ -211,15 +212,18 @@ public class Repeat extends JobEntryBase implements JobEntryInterface, Cloneable
       //
       trans.copyParametersFrom( transMeta );
       trans.copyParametersFrom( parentJob );
-      transMeta.activateParameters();
-      trans.activateParameters();
+
     }
     trans.getTransMeta().setInternalKettleVariables( trans );
     trans.injectVariables( getVariablesMap( transMeta, previousResult ) );
 
+    NamedParams previousParams = previousResult==null ? null : (NamedParams)previousResult.space;
+    VariableSpace previousVars = previousResult==null ? null : previousResult.space;
+    updateParameters( trans, previousVars, getParentJob(), previousParams );
+    updateParameters( transMeta, previousVars, getParentJob(), previousParams );
+
     trans.setLogLevel( getLogLevel() );
     trans.setMetaStore( metaStore );
-
 
     // Inform the parent job we started something here...
     //
@@ -273,15 +277,17 @@ public class Repeat extends JobEntryBase implements JobEntryInterface, Cloneable
       job.copyParametersFrom( jobMeta );
       job.copyParametersFrom( parentJob );
     }
-    jobMeta.activateParameters();
-    job.activateParameters();
+
     job.getJobMeta().setInternalKettleVariables( job );
     job.injectVariables( getVariablesMap( jobMeta, previousResult ) );
+
+    NamedParams previousParams = previousResult==null ? null : (NamedParams)previousResult.space;
+    VariableSpace previousVars = previousResult==null ? null : (VariableSpace)previousResult.space;
+    updateParameters( job, previousVars, getParentJob(), previousParams );
+    updateParameters( jobMeta, previousVars, getParentJob(), previousParams );
     job.setArguments( parentJob.getArguments() );
 
     job.setLogLevel( getLogLevel() );
-
-
 
     if (parentJob.isInteractive()) {
       job.setInteractive( true );
@@ -309,6 +315,46 @@ public class Repeat extends JobEntryBase implements JobEntryInterface, Cloneable
     Result result = job.getResult();
 
     return new ExecutionResult( result, job, flagSet );
+  }
+
+  private void updateParameters( NamedParams subParams, VariableSpace subVars, NamedParams...params ) {
+    // Inherit
+    for (NamedParams param : params) {
+      if (param!=null) {
+        subParams.mergeParametersWith( param, true );
+      }
+    }
+
+    // Any parameters to initialize from the job entry?
+    //
+    String[] parameterNames = subParams.listParameters();
+    for (ParameterDetails parameter : parameters) {
+      if (Const.indexOfString(parameter.getName(), parameterNames)>=0) {
+        // Set this parameter
+        //
+        String value = environmentSubstitute( parameter.getField() );
+        try {
+          subParams.setParameterValue( parameter.getName(), value );
+        } catch ( UnknownParamException e ) {
+          // Ignore
+        }
+      }
+    }
+
+    // Changed values?
+    //
+    if (keepingValues && subVars!=null) {
+      for ( String parameterName : subParams.listParameters() ) {
+        try {
+          String value = subVars.getVariable( parameterName );
+          subParams.setParameterValue( parameterName, value);
+        } catch ( UnknownParamException e ) {
+          // Ignore
+        }
+      }
+    }
+
+    subParams.activateParameters();
   }
 
   private boolean isVariableValueSet( VariableSpace space ) {

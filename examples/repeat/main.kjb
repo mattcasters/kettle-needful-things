@@ -13,7 +13,7 @@
   <parameters>
     <parameter>
       <name>END_VALUE</name>
-      <default_value>1000</default_value>
+      <default_value>9</default_value>
       <description />
     </parameter>
     <parameter>
@@ -390,6 +390,10 @@
         <parameter>
           <name>COUNTER</name>
           <value>${START_VALUE}</value>
+        </parameter>
+        <parameter>
+          <name>PARAMETER1</name>
+          <value>parametervalue2</value>
         </parameter>
       </parameters>
       <parallel>N</parallel>
