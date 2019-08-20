@@ -45,9 +45,9 @@
       <sslMode>N</sslMode>
     </slaveserver>
     <slaveserver>
-      <name>slave2</name>
+      <name>slave1</name>
       <hostname>localhost</hostname>
-      <port>8301</port>
+      <port>8300</port>
       <webAppName />
       <username>cluster</username>
       <password>Encrypted 2be98afc86aa7f2e4cb1aa265cd86aac8</password>
@@ -58,9 +58,9 @@
       <sslMode>N</sslMode>
     </slaveserver>
     <slaveserver>
-      <name>slave1</name>
+      <name>slave2</name>
       <hostname>localhost</hostname>
-      <port>8300</port>
+      <port>8301</port>
       <webAppName />
       <username>cluster</username>
       <password>Encrypted 2be98afc86aa7f2e4cb1aa265cd86aac8</password>
@@ -372,15 +372,9 @@
       <type>EVAL</type>
       <attributes />
       <script>
-var counter = parent_job.getParentJob().getVariable("COUNTER");
-if (counter==null) {
- counter=0;
-}
+var counter = parent_job.getVariable("COUNTER");
 counter++;
 
-// parent_job.logBasic("COUNTER is :"+counter);
-
-parent_job.getParentJob().setVariable("COUNTER", ""+counter);
 parent_job.setVariable("COUNTER", ""+counter);
 
 true;</script>

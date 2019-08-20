@@ -21,7 +21,7 @@
                   </child>
                   <child>
                      <id>filename</id>
-                     <value>/home/matt/git/mattcasters/kettle-needful-things/examples/repeat/repeat.kjb</value>
+                     <value>/home/matt/git/mattcasters/kettle-needful-things/examples/repeat/main.kjb</value>
                      <type>String</type>
                   </child>
                   <child>
@@ -53,7 +53,7 @@
                   </child>
                   <child>
                      <id>filename</id>
-                     <value>/home/matt/git/mattcasters/kettle-needful-things/examples/repeat/main.kjb</value>
+                     <value>/home/matt/git/mattcasters/kettle-needful-things/examples/repeat/repeat.kjb</value>
                      <type>String</type>
                   </child>
                   <child>

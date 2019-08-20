@@ -375,7 +375,13 @@
       <variable_name>COUNTER</variable_name>
       <variable_value>10</variable_value>
       <delay />
-      <parameters />
+      <keep_values>Y</keep_values>
+      <parameters>
+        <parameter>
+          <name>COUNTER</name>
+          <value>0</value>
+        </parameter>
+      </parameters>
       <parallel>N</parallel>
       <draw>Y</draw>
       <nr>0</nr>

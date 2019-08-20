@@ -43,6 +43,7 @@ public class RepeatDialog extends JobEntryDialog implements JobEntryDialogInterf
   private TextVar wVariableName;
   private TextVar wVariableValue;
   private TextVar wDelay;
+  private Button wKeepValues;
   private TableView wParameters;
 
   private Button wOK, wCancel;
@@ -171,6 +172,23 @@ public class RepeatDialog extends JobEntryDialog implements JobEntryDialogInterf
     wDelay.setLayoutData( fdDelay );
     lastControl = wDelay;
 
+    Label wlKeepValues = new Label( shell, SWT.RIGHT );
+    wlKeepValues.setText( "Keep variable values after executions " );
+    props.setLook( wlKeepValues );
+    FormData fdlKeepValues = new FormData();
+    fdlKeepValues.left = new FormAttachment( 0, 0 );
+    fdlKeepValues.right = new FormAttachment( middle, -margin );
+    fdlKeepValues.top = new FormAttachment( lastControl, margin );
+    wlKeepValues.setLayoutData( fdlKeepValues );
+    wKeepValues = new Button( shell, SWT.CHECK | SWT.LEFT );
+    props.setLook( wKeepValues );
+    FormData fdKeepValues = new FormData();
+    fdKeepValues.left = new FormAttachment( middle, 0 );
+    fdKeepValues.right = new FormAttachment( 100, 0 );
+    fdKeepValues.top = new FormAttachment( wlKeepValues, 0, SWT.CENTER );
+    wKeepValues.setLayoutData( fdKeepValues );
+    lastControl = wKeepValues;
+
     // Parameters
     //
     Label wlParameters = new Label( shell, SWT.LEFT );
@@ -245,6 +263,7 @@ public class RepeatDialog extends JobEntryDialog implements JobEntryDialogInterf
     wVariableName.setText( Const.NVL(jobEntry.getVariableName(), ""));
     wVariableValue.setText( Const.NVL(jobEntry.getVariableValue(), ""));
     wDelay.setText( Const.NVL(jobEntry.getDelay(), ""));
+    wKeepValues.setSelection(jobEntry.isKeepingValues());
 
     int rowNr=0;
     for ( ParameterDetails parameter : jobEntry.getParameters()) {
@@ -272,6 +291,7 @@ public class RepeatDialog extends JobEntryDialog implements JobEntryDialogInterf
     jobEntry.setVariableName( wVariableName.getText() );
     jobEntry.setVariableValue( wVariableValue.getText() );
     jobEntry.setDelay( wDelay.getText() );
+    jobEntry.setKeepingValues( wKeepValues.getSelection() );
 
     jobEntry.getParameters().clear();
     for (int i=0;i<wParameters.nrNonEmpty();i++) {

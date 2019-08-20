@@ -52,6 +52,7 @@ public class Repeat extends JobEntryBase implements JobEntryInterface, Cloneable
   public static final String VARIABLE_NAME = "variable_name";
   public static final String VARIABLE_VALUE = "variable_value";
   public static final String DELAY = "delay";
+  public static final String KEEP_VALUES = "keep_values";
 
   public static final String PARAMETERS = "parameters";
   public static final String PARAMETER = "parameter";
@@ -61,6 +62,7 @@ public class Repeat extends JobEntryBase implements JobEntryInterface, Cloneable
   private String variableName;
   private String variableValue;
   private String delay;
+  private boolean keepingValues;
 
   private class ExecutionResult {
     public Result result;
@@ -123,7 +125,7 @@ public class Repeat extends JobEntryBase implements JobEntryInterface, Cloneable
 
     boolean repeat = true;
     while ( repeat && !parentJob.isStopped() ) {
-      executionResult = executeTransformationOrJob( realFilename, nr );
+      executionResult = executeTransformationOrJob( realFilename, nr, executionResult );
       Result result = executionResult.result;
       if ( !result.getResult() || result.getNrErrors()>0 || result.isStopped()) {
         log.logError("The repeating work encountered and error or was stopped. This ends the loop.");
@@ -186,21 +188,25 @@ public class Repeat extends JobEntryBase implements JobEntryInterface, Cloneable
     parentJob.getActiveJobEntryTransformations().remove(key);
   }
 
-  private ExecutionResult executeTransformationOrJob( String realFilename, int nr ) throws KettleException {
+  private ExecutionResult executeTransformationOrJob( String realFilename, int nr, ExecutionResult previousResult ) throws KettleException {
     if ( isTransformation( realFilename ) ) {
-      return executeTransformation( realFilename, nr );
+      return executeTransformation( realFilename, nr, previousResult );
     }
     if ( isJob( realFilename ) ) {
-      return executeJob( realFilename, nr );
+      return executeJob( realFilename, nr, previousResult );
     }
     throw new KettleException( "Don't know if this is a transformation or a job" );
   }
 
-  private ExecutionResult executeTransformation( String realFilename, int nr ) throws KettleException {
+  private ExecutionResult executeTransformation( String realFilename, int nr, ExecutionResult previousResult ) throws KettleException {
     TransMeta transMeta = loadTransformation( realFilename, rep, metaStore, this );
     Trans trans = new Trans( transMeta, this );
     trans.setParentJob( getParentJob() );
-    trans.initializeVariablesFrom( getParentJob() );
+    if (keepingValues && previousResult!=null) {
+      trans.initializeVariablesFrom( previousResult.space );
+    } else {
+      trans.initializeVariablesFrom( getParentJob() );
+    }
     trans.getTransMeta().setInternalKettleVariables( trans );
     trans.injectVariables( getVariablesMap( transMeta ) );
 
@@ -243,14 +249,18 @@ public class Repeat extends JobEntryBase implements JobEntryInterface, Cloneable
     return variablesMap;
   }
 
-  private ExecutionResult executeJob( String realFilename, int nr ) throws KettleException {
+  private ExecutionResult executeJob( String realFilename, int nr, ExecutionResult previousResult ) throws KettleException {
 
     JobMeta jobMeta = loadJob( realFilename, rep, metaStore, this );
 
     Job job = new Job( getRepository(), jobMeta, this );
     job.setParentJob( getParentJob() );
     job.setParentVariableSpace( this );
-    job.initializeVariablesFrom( this );
+    if (keepingValues && previousResult!=null) {
+      job.initializeVariablesFrom( previousResult.space );
+    } else {
+      job.initializeVariablesFrom( this );
+    }
     job.getJobMeta().setInternalKettleVariables( job );
     job.injectVariables( getVariablesMap( jobMeta ) );
     job.setArguments( parentJob.getArguments() );
@@ -328,6 +338,7 @@ public class Repeat extends JobEntryBase implements JobEntryInterface, Cloneable
     xml.append( XMLHandler.addTagValue( VARIABLE_NAME, variableName ) );
     xml.append( XMLHandler.addTagValue( VARIABLE_VALUE, variableValue ) );
     xml.append( XMLHandler.addTagValue( DELAY, delay ) );
+    xml.append( XMLHandler.addTagValue( KEEP_VALUES, keepingValues ) );
 
     xml.append( XMLHandler.openTag( PARAMETERS ) );
     for ( ParameterDetails parameter : parameters ) {
@@ -348,6 +359,7 @@ public class Repeat extends JobEntryBase implements JobEntryInterface, Cloneable
     variableName = XMLHandler.getTagValue( entryNode, VARIABLE_NAME );
     variableValue = XMLHandler.getTagValue( entryNode, VARIABLE_VALUE );
     delay = XMLHandler.getTagValue( entryNode, DELAY );
+    keepingValues = "Y".equalsIgnoreCase( XMLHandler.getTagValue( entryNode, KEEP_VALUES ) );
 
     Node parametersNode = XMLHandler.getSubNode( entryNode, PARAMETERS );
     List<Node> parameterNodes = XMLHandler.getNodes( parametersNode, PARAMETER );
@@ -364,6 +376,7 @@ public class Repeat extends JobEntryBase implements JobEntryInterface, Cloneable
     rep.saveJobEntryAttribute( jobId, getObjectId(), VARIABLE_NAME, variableName );
     rep.saveJobEntryAttribute( jobId, getObjectId(), VARIABLE_VALUE, variableValue );
     rep.saveJobEntryAttribute( jobId, getObjectId(), DELAY, delay );
+    rep.saveJobEntryAttribute( jobId, getObjectId(), KEEP_VALUES, keepingValues );
 
     for ( int i = 0; i < parameters.size(); i++ ) {
       ParameterDetails parameter = parameters.get( i );
@@ -377,6 +390,7 @@ public class Repeat extends JobEntryBase implements JobEntryInterface, Cloneable
     variableName = rep.getJobEntryAttributeString( jobEntryId, VARIABLE_NAME );
     variableValue = rep.getJobEntryAttributeString( jobEntryId, VARIABLE_VALUE );
     delay = rep.getJobEntryAttributeString( jobEntryId, DELAY );
+    keepingValues = rep.getJobEntryAttributeBoolean( jobEntryId, KEEP_VALUES );
 
     parameters = new ArrayList<>();
     int nr = rep.countNrJobEntryAttributes( jobEntryId, PARAMETER + "_name" );
@@ -549,5 +563,21 @@ public class Repeat extends JobEntryBase implements JobEntryInterface, Cloneable
    */
   public void setDelay( String delay ) {
     this.delay = delay;
+  }
+
+  /**
+   * Gets keepingValues
+   *
+   * @return value of keepingValues
+   */
+  public boolean isKeepingValues() {
+    return keepingValues;
+  }
+
+  /**
+   * @param keepingValues The keepingValues to set
+   */
+  public void setKeepingValues( boolean keepingValues ) {
+    this.keepingValues = keepingValues;
   }
 }
