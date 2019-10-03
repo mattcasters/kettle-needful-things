@@ -9,6 +9,8 @@ import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
@@ -46,6 +48,23 @@ public class RepeatDialog extends JobEntryDialog implements JobEntryDialogInterf
   private Button wKeepValues;
   private TableView wParameters;
 
+  private Group wLogFileGroup;
+  private Button wLogFileEnabled;
+  private Label wlLogFileBase;
+  private TextVar wLogFileBase;
+  private Label wlLogFileExtension;
+  private TextVar wLogFileExtension;
+  private Label wlLogFileDateAdded;
+  private Button wLogFileDateAdded;
+  private Label wlLogFileTimeAdded;
+  private Button wLogFileTimeAdded;
+  private Label wlLogFileRepetitionAdded;
+  private Button wLogFileRepetitionAdded;
+  private Label wlLogFileAppended;
+  private Button wLogFileAppended;
+  private Label wlLogFileUpdateInterval;
+  private TextVar wLogFileUpdateInterval;
+
   private Button wOK, wCancel;
 
   public RepeatDialog( Shell parent, JobEntryInterface jobEntry, Repository rep, JobMeta jobMeta ) {
@@ -65,12 +84,6 @@ public class RepeatDialog extends JobEntryDialog implements JobEntryDialogInterf
     shell = new Shell( parent, props.getJobsDialogStyle() );
     props.setLook( shell );
     JobDialog.setShellImage( shell, jobEntry );
-
-    ModifyListener lsMod = new ModifyListener() {
-      public void modifyText( ModifyEvent e ) {
-        jobEntry.setChanged();
-      }
-    };
 
     FormLayout formLayout = new FormLayout();
     formLayout.marginWidth = Const.FORM_MARGIN;
@@ -92,7 +105,6 @@ public class RepeatDialog extends JobEntryDialog implements JobEntryDialogInterf
     wlName.setLayoutData( fdlName );
     wName = new Text( shell, SWT.SINGLE | SWT.LEFT | SWT.BORDER );
     props.setLook( wName );
-    wName.addModifyListener( lsMod );
     FormData fdName = new FormData();
     fdName.left = new FormAttachment( middle, 0 );
     fdName.top = new FormAttachment( 0, margin );
@@ -108,9 +120,9 @@ public class RepeatDialog extends JobEntryDialog implements JobEntryDialogInterf
     fdlFilename.right = new FormAttachment( middle, -margin );
     fdlFilename.top = new FormAttachment( lastControl, margin );
     wlFilename.setLayoutData( fdlFilename );
+
     wFilename = new TextVar( jobMeta, shell, SWT.SINGLE | SWT.LEFT | SWT.BORDER );
     props.setLook( wFilename );
-    wFilename.addModifyListener( lsMod );
     FormData fdFilename = new FormData();
     fdFilename.left = new FormAttachment( middle, 0 );
     fdFilename.right = new FormAttachment( 100, 0 );
@@ -128,7 +140,6 @@ public class RepeatDialog extends JobEntryDialog implements JobEntryDialogInterf
     wlVariableName.setLayoutData( fdlVariableName );
     wVariableName = new TextVar( jobMeta, shell, SWT.SINGLE | SWT.LEFT | SWT.BORDER );
     props.setLook( wVariableName );
-    wVariableName.addModifyListener( lsMod );
     FormData fdVariableName = new FormData();
     fdVariableName.left = new FormAttachment( middle, 0 );
     fdVariableName.right = new FormAttachment( 100, 0 );
@@ -146,7 +157,6 @@ public class RepeatDialog extends JobEntryDialog implements JobEntryDialogInterf
     wlVariableValue.setLayoutData( fdlVariableValue );
     wVariableValue = new TextVar( jobMeta, shell, SWT.SINGLE | SWT.LEFT | SWT.BORDER );
     props.setLook( wVariableValue );
-    wVariableValue.addModifyListener( lsMod );
     FormData fdVariableValue = new FormData();
     fdVariableValue.left = new FormAttachment( middle, 0 );
     fdVariableValue.right = new FormAttachment( 100, 0 );
@@ -164,7 +174,6 @@ public class RepeatDialog extends JobEntryDialog implements JobEntryDialogInterf
     wlDelay.setLayoutData( fdlDelay );
     wDelay = new TextVar( jobMeta, shell, SWT.SINGLE | SWT.LEFT | SWT.BORDER );
     props.setLook( wDelay );
-    wDelay.addModifyListener( lsMod );
     FormData fdDelay = new FormData();
     fdDelay.left = new FormAttachment( middle, 0 );
     fdDelay.right = new FormAttachment( 100, 0 );
@@ -189,6 +198,162 @@ public class RepeatDialog extends JobEntryDialog implements JobEntryDialogInterf
     wKeepValues.setLayoutData( fdKeepValues );
     lastControl = wKeepValues;
 
+    wLogFileGroup = new Group(shell, SWT.SHADOW_NONE);
+    props.setLook(wLogFileGroup);
+    wLogFileGroup.setText("Logging file");
+    FormLayout logFileGroupLayout = new FormLayout();
+    logFileGroupLayout.marginLeft = Const.MARGIN;
+    logFileGroupLayout.marginRight = Const.MARGIN;
+    logFileGroupLayout.marginTop = 2*Const.MARGIN;
+    logFileGroupLayout.marginBottom = 2*Const.MARGIN;
+    wLogFileGroup.setLayout( logFileGroupLayout );
+
+    Label wlLogFileEnabled = new Label( wLogFileGroup, SWT.RIGHT );
+    wlLogFileEnabled.setText( "Log the execution to a file? " );
+    props.setLook( wlLogFileEnabled );
+    FormData fdlLogFileEnabled = new FormData();
+    fdlLogFileEnabled.left = new FormAttachment( 0, 0 );
+    fdlLogFileEnabled.right = new FormAttachment( middle, -margin );
+    fdlLogFileEnabled.top = new FormAttachment( 0, 0 );
+    wlLogFileEnabled.setLayoutData( fdlLogFileEnabled );
+    wLogFileEnabled = new Button( wLogFileGroup, SWT.CHECK | SWT.LEFT );
+    props.setLook( wLogFileEnabled );
+    FormData fdLogFileEnabled = new FormData();
+    fdLogFileEnabled.left = new FormAttachment( middle, 0 );
+    fdLogFileEnabled.right = new FormAttachment( 100, 0 );
+    fdLogFileEnabled.top = new FormAttachment( wlLogFileEnabled, 0, SWT.CENTER );
+    wLogFileEnabled.setLayoutData( fdLogFileEnabled );
+    wLogFileEnabled.addListener( SWT.Selection, e-> enableControls() );
+    Control lastLogControl = wLogFileEnabled;
+
+    wlLogFileBase = new Label( wLogFileGroup, SWT.RIGHT );
+    wlLogFileBase.setText( "The base log file name " );
+    props.setLook( wlLogFileBase );
+    FormData fdlLogFileBase = new FormData();
+    fdlLogFileBase.left = new FormAttachment( 0, 0 );
+    fdlLogFileBase.right = new FormAttachment( middle, -margin );
+    fdlLogFileBase.top = new FormAttachment( lastLogControl, margin );
+    wlLogFileBase.setLayoutData( fdlLogFileBase );
+    wLogFileBase = new TextVar( jobMeta, wLogFileGroup, SWT.SINGLE | SWT.LEFT | SWT.BORDER );
+    props.setLook( wLogFileBase );
+    FormData fdLogFileBase = new FormData();
+    fdLogFileBase.left = new FormAttachment( middle, 0 );
+    fdLogFileBase.right = new FormAttachment( 100, 0 );
+    fdLogFileBase.top = new FormAttachment( wlLogFileBase, 0, SWT.CENTER );
+    wLogFileBase.setLayoutData( fdLogFileBase );
+    lastLogControl = wLogFileBase;
+
+    wlLogFileExtension = new Label( wLogFileGroup, SWT.RIGHT );
+    wlLogFileExtension.setText( "The log file extension " );
+    props.setLook( wlLogFileExtension );
+    FormData fdlLogFileExtension = new FormData();
+    fdlLogFileExtension.left = new FormAttachment( 0, 0 );
+    fdlLogFileExtension.right = new FormAttachment( middle, -margin );
+    fdlLogFileExtension.top = new FormAttachment( lastLogControl, margin );
+    wlLogFileExtension.setLayoutData( fdlLogFileExtension );
+    wLogFileExtension = new TextVar( jobMeta, wLogFileGroup, SWT.SINGLE | SWT.LEFT | SWT.BORDER );
+    props.setLook( wLogFileExtension );
+    FormData fdLogFileExtension = new FormData();
+    fdLogFileExtension.left = new FormAttachment( middle, 0 );
+    fdLogFileExtension.right = new FormAttachment( 100, 0 );
+    fdLogFileExtension.top = new FormAttachment( wlLogFileExtension, 0, SWT.CENTER );
+    wLogFileExtension.setLayoutData( fdLogFileExtension );
+    lastLogControl = wLogFileExtension;
+
+    wlLogFileDateAdded = new Label( wLogFileGroup, SWT.RIGHT );
+    wlLogFileDateAdded.setText( "Add the date to the filename? " );
+    props.setLook( wlLogFileDateAdded );
+    FormData fdlLogFileDateAdded = new FormData();
+    fdlLogFileDateAdded.left = new FormAttachment( 0, 0 );
+    fdlLogFileDateAdded.right = new FormAttachment( middle, -margin );
+    fdlLogFileDateAdded.top = new FormAttachment( lastLogControl, margin );
+    wlLogFileDateAdded.setLayoutData( fdlLogFileDateAdded );
+    wLogFileDateAdded = new Button( wLogFileGroup, SWT.CHECK | SWT.LEFT );
+    props.setLook( wLogFileDateAdded );
+    FormData fdLogFileDateAdded = new FormData();
+    fdLogFileDateAdded.left = new FormAttachment( middle, 0 );
+    fdLogFileDateAdded.right = new FormAttachment( 100, 0 );
+    fdLogFileDateAdded.top = new FormAttachment( wlLogFileDateAdded, 0, SWT.CENTER );
+    wLogFileDateAdded.setLayoutData( fdLogFileDateAdded );
+    lastLogControl = wLogFileDateAdded;
+
+    wlLogFileTimeAdded = new Label( wLogFileGroup, SWT.RIGHT );
+    wlLogFileTimeAdded.setText( "Add the time to the filename? " );
+    props.setLook( wlLogFileTimeAdded );
+    FormData fdlLogFileTimeAdded = new FormData();
+    fdlLogFileTimeAdded.left = new FormAttachment( 0, 0 );
+    fdlLogFileTimeAdded.right = new FormAttachment( middle, -margin );
+    fdlLogFileTimeAdded.top = new FormAttachment( lastLogControl, margin );
+    wlLogFileTimeAdded.setLayoutData( fdlLogFileTimeAdded );
+    wLogFileTimeAdded = new Button( wLogFileGroup, SWT.CHECK | SWT.LEFT );
+    props.setLook( wLogFileTimeAdded );
+    FormData fdLogFileTimeAdded = new FormData();
+    fdLogFileTimeAdded.left = new FormAttachment( middle, 0 );
+    fdLogFileTimeAdded.right = new FormAttachment( 100, 0 );
+    fdLogFileTimeAdded.top = new FormAttachment( wlLogFileTimeAdded, 0, SWT.CENTER );
+    wLogFileTimeAdded.setLayoutData( fdLogFileTimeAdded );
+    lastLogControl = wLogFileTimeAdded;
+
+    wlLogFileRepetitionAdded = new Label( wLogFileGroup, SWT.RIGHT );
+    wlLogFileRepetitionAdded.setText( "Add the repetition number to the filename? " );
+    props.setLook( wlLogFileRepetitionAdded );
+    FormData fdlLogFileRepetitionAdded = new FormData();
+    fdlLogFileRepetitionAdded.left = new FormAttachment( 0, 0 );
+    fdlLogFileRepetitionAdded.right = new FormAttachment( middle, -margin );
+    fdlLogFileRepetitionAdded.top = new FormAttachment( lastLogControl, margin );
+    wlLogFileRepetitionAdded.setLayoutData( fdlLogFileRepetitionAdded );
+    wLogFileRepetitionAdded = new Button( wLogFileGroup, SWT.CHECK | SWT.LEFT );
+    props.setLook( wLogFileRepetitionAdded );
+    FormData fdLogFileRepetitionAdded = new FormData();
+    fdLogFileRepetitionAdded.left = new FormAttachment( middle, 0 );
+    fdLogFileRepetitionAdded.right = new FormAttachment( 100, 0 );
+    fdLogFileRepetitionAdded.top = new FormAttachment( wlLogFileRepetitionAdded, 0, SWT.CENTER );
+    wLogFileRepetitionAdded.setLayoutData( fdLogFileRepetitionAdded );
+    lastLogControl = wLogFileRepetitionAdded;
+
+    wlLogFileAppended = new Label( wLogFileGroup, SWT.RIGHT );
+    wlLogFileAppended.setText( "Append to any existing log file? " );
+    props.setLook( wlLogFileAppended );
+    FormData fdlLogFileAppended = new FormData();
+    fdlLogFileAppended.left = new FormAttachment( 0, 0 );
+    fdlLogFileAppended.right = new FormAttachment( middle, -margin );
+    fdlLogFileAppended.top = new FormAttachment( lastLogControl, margin );
+    wlLogFileAppended.setLayoutData( fdlLogFileAppended );
+    wLogFileAppended = new Button( wLogFileGroup, SWT.CHECK | SWT.LEFT );
+    props.setLook( wLogFileAppended );
+    FormData fdLogFileAppended = new FormData();
+    fdLogFileAppended.left = new FormAttachment( middle, 0 );
+    fdLogFileAppended.right = new FormAttachment( 100, 0 );
+    fdLogFileAppended.top = new FormAttachment( wlLogFileAppended, 0, SWT.CENTER );
+    wLogFileAppended.setLayoutData( fdLogFileAppended );
+    lastLogControl = wLogFileAppended;
+
+    wlLogFileUpdateInterval = new Label( wLogFileGroup, SWT.RIGHT );
+    wlLogFileUpdateInterval.setText( "The log file update interval in ms " );
+    props.setLook( wlLogFileUpdateInterval );
+    FormData fdlLogFileUpdateInterval = new FormData();
+    fdlLogFileUpdateInterval.left = new FormAttachment( 0, 0 );
+    fdlLogFileUpdateInterval.right = new FormAttachment( middle, -margin );
+    fdlLogFileUpdateInterval.top = new FormAttachment( lastLogControl, margin );
+    wlLogFileUpdateInterval.setLayoutData( fdlLogFileUpdateInterval );
+    wLogFileUpdateInterval = new TextVar( jobMeta, wLogFileGroup, SWT.SINGLE | SWT.LEFT | SWT.BORDER );
+    props.setLook( wLogFileUpdateInterval );
+    FormData fdLogFileUpdateInterval = new FormData();
+    fdLogFileUpdateInterval.left = new FormAttachment( middle, 0 );
+    fdLogFileUpdateInterval.right = new FormAttachment( 100, 0 );
+    fdLogFileUpdateInterval.top = new FormAttachment( wlLogFileUpdateInterval, 0, SWT.CENTER );
+    wLogFileUpdateInterval.setLayoutData( fdLogFileUpdateInterval );
+    lastLogControl = wLogFileUpdateInterval;
+
+
+    FormData fdLogFileGroup = new FormData(  );
+    fdLogFileGroup.left = new FormAttachment( 0, 0 );
+    fdLogFileGroup.right = new FormAttachment( 100, 0 );
+    fdLogFileGroup.top = new FormAttachment( lastControl, margin );
+    wLogFileGroup.setLayoutData( fdLogFileGroup );
+    wLogFileGroup.pack();
+    lastControl = wLogFileGroup;
+
     // Parameters
     //
     Label wlParameters = new Label( shell, SWT.LEFT );
@@ -196,7 +361,7 @@ public class RepeatDialog extends JobEntryDialog implements JobEntryDialogInterf
     props.setLook( wlParameters );
     FormData fdlParameters = new FormData();
     fdlParameters.left = new FormAttachment( 0, 0 );
-    fdlParameters.top = new FormAttachment( lastControl, margin );
+    fdlParameters.top = new FormAttachment( lastControl, 2*margin );
     fdlParameters.right = new FormAttachment( 100, 0 );
     wlParameters.setLayoutData( fdlParameters );
     lastControl = wlParameters;
@@ -253,6 +418,25 @@ public class RepeatDialog extends JobEntryDialog implements JobEntryDialogInterf
     return jobEntry;
   }
 
+  private void enableControls() {
+    boolean logEnabled = wLogFileEnabled.getSelection();
+
+    wlLogFileBase.setEnabled(logEnabled);
+    wLogFileBase.setEnabled(logEnabled);
+    wlLogFileExtension.setEnabled(logEnabled);
+    wLogFileExtension.setEnabled(logEnabled);
+    wlLogFileDateAdded.setEnabled(logEnabled);
+    wLogFileDateAdded.setEnabled(logEnabled);
+    wlLogFileTimeAdded.setEnabled(logEnabled);
+    wLogFileTimeAdded.setEnabled(logEnabled);
+    wlLogFileRepetitionAdded.setEnabled(logEnabled);
+    wLogFileRepetitionAdded.setEnabled(logEnabled);
+    wlLogFileAppended.setEnabled(logEnabled);
+    wLogFileAppended.setEnabled(logEnabled);
+    wlLogFileUpdateInterval.setEnabled(logEnabled);
+    wLogFileUpdateInterval.setEnabled(logEnabled);
+  }
+
   private void cancel() {
     jobEntry = null;
     dispose();
@@ -266,6 +450,15 @@ public class RepeatDialog extends JobEntryDialog implements JobEntryDialogInterf
     wDelay.setText( Const.NVL(jobEntry.getDelay(), ""));
     wKeepValues.setSelection(jobEntry.isKeepingValues());
 
+    wLogFileEnabled.setSelection( jobEntry.isLogFileEnabled() );
+    wLogFileBase.setText(Const.NVL(jobEntry.getLogFileBase(),""));
+    wLogFileExtension.setText(Const.NVL(jobEntry.getLogFileExtension(), ""));
+    wLogFileDateAdded.setSelection( jobEntry.isLogFileDateAdded() );
+    wLogFileTimeAdded.setSelection( jobEntry.isLogFileTimeAdded());
+    wLogFileRepetitionAdded.setSelection( jobEntry.isLogFileRepetitionAdded() );
+    wLogFileAppended.setSelection( jobEntry.isLogFileAppended() );
+    wLogFileUpdateInterval.setText(Const.NVL(jobEntry.getLogFileUpdateInterval(), "5000"));
+
     int rowNr=0;
     for ( ParameterDetails parameter : jobEntry.getParameters()) {
       TableItem item = wParameters.table.getItem( rowNr++ );
@@ -275,8 +468,11 @@ public class RepeatDialog extends JobEntryDialog implements JobEntryDialogInterf
     wParameters.setRowNums();
     wParameters.optWidth( true );
 
+
     wName.selectAll();
     wName.setFocus();
+
+    enableControls();
   }
 
   private void ok() {
@@ -293,6 +489,15 @@ public class RepeatDialog extends JobEntryDialog implements JobEntryDialogInterf
     jobEntry.setVariableValue( wVariableValue.getText() );
     jobEntry.setDelay( wDelay.getText() );
     jobEntry.setKeepingValues( wKeepValues.getSelection() );
+
+    jobEntry.setLogFileEnabled( wLogFileEnabled.getSelection() );
+    jobEntry.setLogFileAppended( wLogFileAppended.getSelection() );
+    jobEntry.setLogFileBase( wLogFileBase.getText() );
+    jobEntry.setLogFileExtension( wLogFileExtension.getText() );
+    jobEntry.setLogFileDateAdded( wLogFileDateAdded.getSelection() );
+    jobEntry.setLogFileTimeAdded( wLogFileTimeAdded.getSelection() );
+    jobEntry.setLogFileRepetitionAdded( wLogFileRepetitionAdded.getSelection() );
+    jobEntry.setLogFileUpdateInterval( wLogFileUpdateInterval.getText() );
 
     jobEntry.getParameters().clear();
     for (int i=0;i<wParameters.nrNonEmpty();i++) {
