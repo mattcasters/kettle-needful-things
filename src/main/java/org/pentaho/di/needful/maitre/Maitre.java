@@ -397,6 +397,11 @@ public class Maitre implements Runnable {
 
       job.setLogLevel( configuration.getLogLevel() );
 
+      // Explicitly set parameters
+      for (String parameterName : configuration.getParams().keySet()) {
+        jobMeta.setParameterValue( parameterName, configuration.getParams().get( parameterName ) );
+      }
+
       // Also copy the parameters over...
       //
       job.copyParametersFrom( jobMeta );
