@@ -54,7 +54,7 @@ public class Maitre implements Runnable {
   @Option( names = { "-f", "-z", "--file" }, description = "The filename of the job or transformation to run" )
   private String filename;
 
-  @Option( names = { "-l", "--level" }, description = "The debug level, one of NONE, MINIMAL, BASIC, DETAILED, DEBUG, ROWLEVEL" )
+  @Option( names = { "-l", "--level" }, description = "The debug level : None, Minimal, Basic, Detailed, Debug, Rowlevel (case insensitive)" )
   private String level;
 
   @Option( names = { "-h", "--help" }, usageHelp = true, description = "Displays this help message and quits." )
@@ -500,11 +500,33 @@ public class Maitre implements Runnable {
     configuration.setPassingExport( exportToSlaveServer );
     realRunConfigurationName = space.environmentSubstitute( runConfigurationName );
     configuration.setRunConfiguration( realRunConfigurationName );
-    configuration.setLogLevel( LogLevel.getLogLevelForCode( space.environmentSubstitute( level ) ) );
+    if (StringUtils.isNotEmpty( level )) {
+      LogLevel logLevel = determineLogLevel( space.environmentSubstitute( level ) );
+      if (logLevel!=null) {
+        configuration.setLogLevel(logLevel);
+      }
+    }
 
     // Set variables and parameters...
     //
     parseParametersAndVariables( cmd, configuration, namedParams );
+  }
+
+  /**
+   * Case insensitive and trimmed lookup of the log level.
+   * @param logLevelString The log level parameter string
+   * @return The log level or null if none is found
+   */
+  private LogLevel determineLogLevel( String logLevelString ) {
+    if (StringUtils.isEmpty( logLevelString )) {
+      return null;
+    }
+    for (LogLevel logLevel : LogLevel.values() ) {
+      if (logLevel.getCode().equalsIgnoreCase( Const.trim(logLevelString) )) {
+        return logLevel;
+      }
+    }
+    return null; // Keep the default
   }
 
   private void configureSlaveServer( ExecutionConfiguration configuration, SharedObjects sharedObjects, String name ) {
